@@ -30,48 +30,54 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 public class IhpAuthority {
-	
+	final static String DIR_NAME = "/home/adi/ihp/authority/";
+	static File inputFile = getXmlFile();
 	static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
 	static LocalDateTime now = LocalDateTime.now();
+	static File outputFile = new File(DIR_NAME + inputFile.getName().substring(0, inputFile.getName().indexOf(".xml")) + "_" + dtf.format(now) + ".txt");
 //	final static File inputFile = new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\AUTHORITY_46499859700002791_1_HAICHI.xml");
 //	final static File outputFile = new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\AUTHORITY_46499859700002791_1_HAICHI" + dtf.format(now) + ".txt");
-	final static File inputFile = new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\IHP10_Authority_file.xml");
-	final static File outputFile = new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\IHP10_Authority_file" + dtf.format(now) + ".txt");
+//	final static File inputFile = new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\IHP10_Authority_file.xml");
+//	final static File outputFile = new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\IHP10_Authority_file" + dtf.format(now) + ".txt");
+	static HashMap<String, Integer> tagToMaxOfTimes = new HashMap<String, Integer>();
 //	static HashMap<String, Integer> tagToMaxOfTimes = new HashMap<String, Integer>() {{
 //	    put("150", 0);
 //	    put("450", 0);
 //	    put("550", 0);
 //	    put("100", 0);
 //	}};
-	static HashMap<String, Integer> tagToMaxOfTimes = new HashMap<String, Integer>() {{
-	    put("100", 0);
-	    put("400", 0);
-	    put("500", 0);
-	    put("700", 0);
-	    put("110", 0);
-	    put("410", 0);
-	    put("510", 0);
-	    put("710", 0);
-	    put("111", 0);
-	    put("411", 0);
-	    put("511", 0);
-	    put("711", 0);
-	    put("130", 0);
-	    put("430", 0);
-	    put("530", 0);
-	    put("730", 0);
-	    put("150", 0);
-	    put("450", 0);
-	    put("550", 0);
-	    put("750", 0);
-	    put("151", 0);
-	    put("451", 0);
-	    put("551", 0);
-	    put("751", 0);
-	}};
+//	static HashMap<String, Integer> tagToMaxOfTimes = new HashMap<String, Integer>() {{
+//	    put("100", 0);
+//	    put("400", 0);
+//	    put("500", 0);
+//	    put("700", 0);
+//	    put("110", 0);
+//	    put("410", 0);
+//	    put("510", 0);
+//	    put("710", 0);
+//	    put("111", 0);
+//	    put("411", 0);
+//	    put("511", 0);
+//	    put("711", 0);
+//	    put("130", 0);
+//	    put("430", 0);
+//	    put("530", 0);
+//	    put("730", 0);
+//	    put("150", 0);
+//	    put("450", 0);
+//	    put("550", 0);
+//	    put("750", 0);
+//	    put("151", 0);
+//	    put("451", 0);
+//	    put("551", 0);
+//	    put("751", 0);
+//	}};
 
 	public static void main(String[] args) {
 		try {
+			for(String arg : args) {
+				tagToMaxOfTimes.put(arg, 0);
+			}
 			outputFile.createNewFile();
 			BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, StandardCharsets.UTF_8));
 			//BufferedReader r = new BufferedReader(new FileReader(inputFile, StandardCharsets.UTF_8));
@@ -189,7 +195,7 @@ public class IhpAuthority {
 	}
 	
 	/*init hashmap to contain each tag with its max time of appearance in order to build excel columns*/
-	public static void initMaxTagsAppearance(MarcReader r) {
+	private static void initMaxTagsAppearance(MarcReader r) {
 		while (r.hasNext()) {
             Record record = r.next();
             for (Map.Entry<String, Integer> entry : tagToMaxOfTimes.entrySet()) {
@@ -199,6 +205,19 @@ public class IhpAuthority {
             	}
             }
 		}
+	}
+	
+	private static File getXmlFile() {
+		File file = null;
+		File folder = new File(DIR_NAME);
+		File[] listOfFiles = folder.listFiles();
+
+		for (int i=0; i<listOfFiles.length; i++){
+		  if (listOfFiles[i].isFile() && listOfFiles[i].getName().endsWith(".xml")){
+			  file = listOfFiles[i];
+		  }
+		}
+		return file;
 	}
 
 }
