@@ -1,5 +1,4 @@
 import java.io.BufferedWriter;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,21 +11,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.marc4j.MarcReader;
-import org.marc4j.MarcStreamReader;
 import org.marc4j.MarcXmlReader;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
 import org.marc4j.marc.Subfield;
 import org.marc4j.marc.VariableField;
 import org.marc4j.marc.impl.ControlFieldImpl;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 public class IhpAuthority {
@@ -86,32 +83,50 @@ public class IhpAuthority {
 			//MarcReader reader = new MarcStreamReader(in, "UTF8");
 			MarcReader r = new MarcXmlReader(in);
 			initMaxTagsAppearance(r);
+//			// workbook object
+//			XSSFWorkbook workbook = new XSSFWorkbook();
+//			XSSFSheet spreadsheet = workbook.createSheet("AUTHORITY");
+//			XSSFRow row = spreadsheet.createRow(0);
+//			row.createCell(0).setCellValue("001");
 			StringBuilder sb = new StringBuilder();
 			sb.append("001");
 			sb.append(";");
-			for (Map.Entry<String, Integer> set : tagToMaxOfTimes.entrySet()) {
+//			int globalIndex = 1;
+			TreeMap<String, Integer> sortedHash = new TreeMap<>(tagToMaxOfTimes);
+			for (Map.Entry<String, Integer> set : sortedHash.entrySet()) {
 				int index = set.getValue();
 				for(int i=0; i<index; i++) {
 					sb.append(set.getKey());
 					sb.append(";");
+//					row.createCell(globalIndex).setCellValue(set.getKey());
+//					globalIndex++;
 				}
 			}
-			String s = sb.toString().endsWith(";") ? sb.toString().substring(0, sb.toString().length()-1) : sb.toString();
-			writer.write(s + System.lineSeparator());
+			String titles = sb.toString().endsWith(";") ? sb.toString().substring(0, sb.toString().length()-1) : sb.toString();
+			String[]arrTiltes = titles.split(";"); 
+			writer.write(titles + System.lineSeparator());
 			in.close();
-//			// workbook object
-//			XSSFWorkbook workbook = new XSSFWorkbook();
-//			XSSFSheet spreadsheet = workbook.createSheet("AUTHORITY");
-//			XSSFRow row;
-//			Map<String, Object[]> data = new TreeMap<String, Object[]>();
-//			data.put("1", new Object[] { s.split(";") });
-////	        XSSFSheet spreadsheet = workbook.createSheet("IhpAuthority");
-////	        XSSFRow row;
+			
+			HSSFWorkbook workbook = new HSSFWorkbook();
+	        HSSFSheet worksheet = workbook.createSheet("AUTHORITY");        
+	        HSSFRow rowTitle = worksheet.createRow(0);
+	        
+	        // set  titles	        
+	        for(int i=0;i<arrTiltes.length;i++){
+	            HSSFCell cellTitle = rowTitle.createCell(i);
+	            cellTitle.setCellValue(arrTiltes[i]);	
+	            //rowTitle.createCell(i).setCellValue(arrTiltes[i]);
+	        }
+
 			in = new FileInputStream(inputFile);
 			MarcReader reades = new MarcXmlReader(in);
+			int lineNum = 1;
 			//Reads all records
 			while (reades.hasNext()) {
                 Record record = reades.next();
+                HSSFRow rowValue = worksheet.createRow(lineNum++);
+                int cell=0;
+//                XSSFRow bodyRow = spreadsheet.createRow(lineNum);
                 sb = new StringBuilder();
                 String id = record.getVariableField("001") != null ? ((ControlFieldImpl)record.getVariableField("001")).getData() : null;
                 if(id == null) {
@@ -121,28 +136,47 @@ public class IhpAuthority {
                 if("9819205915802791".equalsIgnoreCase(id)) {
                 	continue;
                 }
+//                bodyRow.createCell(0).setCellValue(id);
+                HSSFCell cell0 = rowValue.createCell(cell);
+                cell0.setCellValue(id);
+                cell++;
                 sb.append(id);
                 sb.append(";");
                 //List<DataField> dataFields = record.getDataFields();
-                for (Map.Entry<String, Integer> entry : tagToMaxOfTimes.entrySet()) {
+//                int cellNum = 1; 
+                for (Map.Entry<String, Integer> entry : sortedHash.entrySet()) {
                 	List<VariableField> tagInstances = record.getVariableFields(entry.getKey());
                 	for(VariableField tagInstance : tagInstances) {
+                		StringBuilder sbe = new StringBuilder();
                 		DataField df = (DataField)tagInstance;
                     	String tag = df.getTag();
                 		//sb.append(tag);
                 		List<Subfield> subFields = df.getSubfields();
                 		for(Subfield sf : subFields) {
                 			sb.append(sf.getCode());
+                			sbe.append(sf.getCode());
                 			sb.append("--");
+                			sbe.append("--");
                 			sb.append(sf.getData());
+                			sbe.append(sf.getData());
                 			sb.append("@");
+                			sbe.append("@");
                 		}
                 		sb.deleteCharAt(sb.length() -1);
+                		sbe.deleteCharAt(sbe.length() -1);
+                		rowValue.createCell(cell).setCellValue(sbe.toString());
+                		cell++;
+//                		bodyRow.createCell(cellNum).setCellValue(sb.toString());
+//                		cellNum++;
                 		sb.append(";");
                 	}
                 	int numOfEmptyCell = entry.getValue() - tagInstances.size();
                 	while(numOfEmptyCell > 0) {
                 		numOfEmptyCell--;
+//                		bodyRow.createCell(cellNum).setCellValue(" ");
+//                		cellNum++;
+                		rowValue.createCell(cell).setCellValue(" ");
+                		cell++;
                 		sb.append(" ");
                 		sb.append(";");
                 	}
@@ -153,17 +187,19 @@ public class IhpAuthority {
 //        		int rowid = 0;
 //        		for(String key : keyid) {
 //        			row = spreadsheet.createRow(rowid++);
-//        			Object[] objectArr = data.get(key);
+//        			String[] objectArr = data.get(key);
 //        			int cellid = 0;
-//        			for (Object obj : objectArr) {
+//        			for (String obj : objectArr) {
 //        				Cell cell = row.createCell(cellid++);
 //        				cell.setCellValue((String)obj);
 //        			}
 //        		}
-//        		FileOutputStream out = new FileOutputStream(new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\savedexcel\\GFGsheet.xlsx"));
-//        		workbook.write(out);
-//        		out.close();
-//        		workbook.close();
+        		//FileOutputStream out = new FileOutputStream(new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\savedexcel\\GFGsheet.xls"));
+        		FileOutputStream out = new FileOutputStream(new File(DIR_NAME + inputFile.getName().substring(0, inputFile.getName().indexOf(".xml")) + "_" + dtf.format(now) + ".xls"));
+        		workbook.write(out);
+        		out.flush();
+        		out.close();
+        		//workbook.close();
                 /*Working good split under for new sulotion 
                 List<DataField> dataFields = record.getDataFields();
                 for(DataField df : dataFields) {
