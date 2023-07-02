@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFCell;
+import org.apache.poi.xssf.streaming.SXSSFRow;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.marc4j.MarcReader;
 import org.marc4j.MarcXmlReader;
 import org.marc4j.marc.DataField;
@@ -25,17 +25,17 @@ import org.marc4j.marc.Subfield;
 import org.marc4j.marc.VariableField;
 import org.marc4j.marc.impl.ControlFieldImpl;
 
-
+/**/
 public class IhpAuthority {
-	final static String DIR_NAME = "/home/adi/ihp/authority/";
+	final static String DIR_NAME = "/home/marina/authority/";//"/home/adi/ihp/authority/";"D:\\Work\\ihp\\";
 	static File inputFile = getXmlFile();
 	static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
 	static LocalDateTime now = LocalDateTime.now();
 	static File outputFile = new File(DIR_NAME + inputFile.getName().substring(0, inputFile.getName().indexOf(".xml")) + "_" + dtf.format(now) + ".txt");
 //	final static File inputFile = new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\AUTHORITY_46499859700002791_1_HAICHI.xml");
 //	final static File outputFile = new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\AUTHORITY_46499859700002791_1_HAICHI" + dtf.format(now) + ".txt");
-//	final static File inputFile = new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\IHP10_Authority_file.xml");
-//	final static File outputFile = new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\IHP10_Authority_file" + dtf.format(now) + ".txt");
+//	final static File inputFile = new File("D:\\Work\\ihp\\BIBLIOGRAPHIC_6475704930002792_1.xml");
+//	final static File outputFile = new File("D:\\Work\\ihp\\BIBLIOGRAPHIC_6475704930002792_1" + dtf.format(now) + ".txt");
 	static HashMap<String, Integer> tagToMaxOfTimes = new HashMap<String, Integer>();
 //	static HashMap<String, Integer> tagToMaxOfTimes = new HashMap<String, Integer>() {{
 //	    put("150", 0);
@@ -83,23 +83,15 @@ public class IhpAuthority {
 			//MarcReader reader = new MarcStreamReader(in, "UTF8");
 			MarcReader r = new MarcXmlReader(in);
 			initMaxTagsAppearance(r);
-//			// workbook object
-//			XSSFWorkbook workbook = new XSSFWorkbook();
-//			XSSFSheet spreadsheet = workbook.createSheet("AUTHORITY");
-//			XSSFRow row = spreadsheet.createRow(0);
-//			row.createCell(0).setCellValue("001");
 			StringBuilder sb = new StringBuilder();
 			sb.append("001");
 			sb.append(";");
-//			int globalIndex = 1;
 			TreeMap<String, Integer> sortedHash = new TreeMap<>(tagToMaxOfTimes);
 			for (Map.Entry<String, Integer> set : sortedHash.entrySet()) {
 				int index = set.getValue();
 				for(int i=0; i<index; i++) {
 					sb.append(set.getKey());
 					sb.append(";");
-//					row.createCell(globalIndex).setCellValue(set.getKey());
-//					globalIndex++;
 				}
 			}
 			String titles = sb.toString().endsWith(";") ? sb.toString().substring(0, sb.toString().length()-1) : sb.toString();
@@ -107,13 +99,13 @@ public class IhpAuthority {
 			writer.write(titles + System.lineSeparator());
 			in.close();
 			
-			HSSFWorkbook workbook = new HSSFWorkbook();
-	        HSSFSheet worksheet = workbook.createSheet("AUTHORITY");        
-	        HSSFRow rowTitle = worksheet.createRow(0);
+			SXSSFWorkbook workbook = new SXSSFWorkbook();
+			SXSSFSheet worksheet = workbook.createSheet("AUTHORITY");        
+			SXSSFRow rowTitle = worksheet.createRow(0);
 	        
 	        // set  titles	        
 	        for(int i=0;i<arrTiltes.length;i++){
-	            HSSFCell cellTitle = rowTitle.createCell(i);
+	        	SXSSFCell cellTitle = rowTitle.createCell(i);
 	            cellTitle.setCellValue(arrTiltes[i]);	
 	            //rowTitle.createCell(i).setCellValue(arrTiltes[i]);
 	        }
@@ -124,7 +116,7 @@ public class IhpAuthority {
 			//Reads all records
 			while (reades.hasNext()) {
                 Record record = reades.next();
-                HSSFRow rowValue = worksheet.createRow(lineNum++);
+                SXSSFRow rowValue = worksheet.createRow(lineNum++);
                 int cell=0;
 //                XSSFRow bodyRow = spreadsheet.createRow(lineNum);
                 sb = new StringBuilder();
@@ -137,7 +129,7 @@ public class IhpAuthority {
                 	continue;
                 }
 //                bodyRow.createCell(0).setCellValue(id);
-                HSSFCell cell0 = rowValue.createCell(cell);
+                SXSSFCell cell0 = rowValue.createCell(cell);
                 cell0.setCellValue(id);
                 cell++;
                 sb.append(id);
@@ -183,22 +175,12 @@ public class IhpAuthority {
                 }
                 String str = sb.toString().endsWith(";") ? sb.toString().substring(0, sb.toString().length()-1) : sb.toString();
         		writer.write(str + System.lineSeparator());
-//        		Set<String> keyid = data.keySet();
-//        		int rowid = 0;
-//        		for(String key : keyid) {
-//        			row = spreadsheet.createRow(rowid++);
-//        			String[] objectArr = data.get(key);
-//        			int cellid = 0;
-//        			for (String obj : objectArr) {
-//        				Cell cell = row.createCell(cellid++);
-//        				cell.setCellValue((String)obj);
-//        			}
-//        		}
+
         		//FileOutputStream out = new FileOutputStream(new File("C:\\Users\\ajacobsmo\\Desktop\\ihp\\savedexcel\\GFGsheet.xls"));
-        		FileOutputStream out = new FileOutputStream(new File(DIR_NAME + inputFile.getName().substring(0, inputFile.getName().indexOf(".xml")) + "_" + dtf.format(now) + ".xls"));
-        		workbook.write(out);
-        		out.flush();
-        		out.close();
+//        		FileOutputStream out = new FileOutputStream(new File(DIR_NAME + inputFile.getName().substring(0, inputFile.getName().indexOf(".xml")) + "_" + dtf.format(now) + ".xlsx"));
+//        		workbook.write(out);
+//        		out.flush();
+//        		out.close();
         		//workbook.close();
                 /*Working good split under for new sulotion 
                 List<DataField> dataFields = record.getDataFields();
@@ -221,6 +203,11 @@ public class IhpAuthority {
                 }*/
                 
            } 
+			FileOutputStream out = new FileOutputStream(new File(DIR_NAME + inputFile.getName().substring(0, inputFile.getName().indexOf(".xml")) + "_" + dtf.format(now) + ".xlsx"));
+    		workbook.write(out);
+    		out.flush();
+    		out.close();
+    		workbook.close();
 			writer.close();
 			System.out.println("finished");
 		} catch (IOException e) {
